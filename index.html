@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>日常會話日文跟讀機</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            text-align: center;
+            background: #f0f8ff;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .sentence {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 10px;
+        }
+        .text {
+            text-align: left;
+            flex-grow: 1;
+        }
+        .jp {
+            font-size: 20px;
+            color: #555;
+            margin-bottom: 5px;
+        }
+        .zh {
+            font-size: 16px;
+            color: #777;
+        }
+        .kana {
+            font-size: 16px;
+            color: #999;
+            margin-top: 5px;
+        }
+        .play-btn, .slow-btn {
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        .play-btn {
+            background: #007BFF;
+            color: white;
+        }
+        .play-btn:hover {
+            background: #0056b3;
+        }
+        .slow-btn {
+            background: #ff5733;
+            color: white;
+        }
+        .slow-btn:hover {
+            background: #e04e2b;
+        }
+        .buttons {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+        @media (max-width: 768px) {
+            .sentence {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .text {
+                margin-bottom: 10px;
+                width: 100%;
+            }
+            .buttons {
+                flex-direction: row;
+                align-items: center;
+                width: 100%;
+                justify-content: flex-end;
+            }
+            .play-btn, .slow-btn {
+                margin-left: 10px;
+                margin-bottom: 0;
+                width: auto;
+            }
+        }
+        .pagination {
+            margin-top: 20px;
+        }
+        .pagination button {
+            padding: 10px 15px;
+            font-size: 16px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 0 5px;
+        }
+        .pagination button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .pagination button:hover:not(:disabled) {
+            background: #218838;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>日常會話日文跟讀機</h1>
+        <div id="sentences"></div>
+        <div class="pagination" id="pagination"></div>
+    </div>
+
+    <script>
+        const sentences = [
+            { jp: "お久しぶりですね", kana: "おひさしぶりですね", zh: "好久不見了呢", audio: "audio/sentence_1.mp3", slowAudio: "audio/slow/sentence_1.mp3" },
+            { jp: "最近どうですか？", kana: "さいきんどうですか？", zh: "最近過得怎麼樣？", audio: "audio/sentence_2.mp3", slowAudio: "audio/slow/sentence_2.mp3" },
+            { jp: "じゃあ、また会いましょうね", kana: "じゃあ、またあいましょうね", zh: "那麼，我們下次見面吧", audio: "audio/sentence_3.mp3", slowAudio: "audio/slow/sentence_3.mp3" },
+            { jp: "じゃあ、また後でお会いしましょう", kana: "じゃあ、またあとでおあいしましょう", zh: "那麼，我們待會再見面吧", audio: "audio/sentence_4.mp3", slowAudio: "audio/slow/sentence_4.mp3" },
+            { jp: "私、先に行くね", kana: "わたし、さきにいくね", zh: "我先走啦", audio: "audio/sentence_5.mp3", slowAudio: "audio/slow/sentence_5.mp3" },
+            { jp: "そろそろ行かなきゃね", kana: "そろそろいかなきゃね", zh: "差不多得走了呢", audio: "audio/sentence_6.mp3", slowAudio: "audio/slow/sentence_6.mp3" },
+            { jp: "お大事にしてくださいね", kana: "おだいじにしてくださいね", zh: "請保重身體哦", audio: "audio/sentence_7.mp3", slowAudio: "audio/slow/sentence_7.mp3" },
+            { jp: "元気でいてくださいね", kana: "げんきでいてくださいね", zh: "請保持健康哦", audio: "audio/sentence_8.mp3", slowAudio: "audio/slow/sentence_8.mp3" },
+            { jp: "気をつけてくださいね", kana: "きをつけてくださいね", zh: "請小心哦", audio: "audio/sentence_9.mp3", slowAudio: "audio/slow/sentence_9.mp3" },
+            { jp: "また連絡しますからね", kana: "またれんらくしますからね", zh: "我會再聯繫你的哦", audio: "audio/sentence_10.mp3", slowAudio: "audio/slow/sentence_10.mp3" },
+            { jp: "おめでとうございます！", kana: "おめでとうございます！", zh: "恭喜你！", audio: "audio/sentence_11.mp3", slowAudio: "audio/slow/sentence_11.mp3" },
+            { jp: "お待たせしました", kana: "おまたせしました", zh: "讓你久等了，抱歉", audio: "audio/sentence_12.mp3", slowAudio: "audio/slow/sentence_12.mp3" },
+            { jp: "もう一度お願いします", kana: "もういちどおねがいします", zh: "請再說一次", audio: "audio/sentence_13.mp3", slowAudio: "audio/slow/sentence_13.mp3" },
+            { jp: "お腹が空きましたね", kana: "おなかがすきましたね", zh: "肚子餓了吧", audio: "audio/sentence_14.mp3", slowAudio: "audio/slow/sentence_14.mp3" },
+            { jp: "お腹がいっぱいになりました", kana: "おなかがいっぱいになりました", zh: "我吃飽了", audio: "audio/sentence_15.mp3", slowAudio: "audio/slow/sentence_15.mp3" },
+            { jp: "喉が渇きましたね", kana: "のどがかわきましたね", zh: "口渴了吧", audio: "audio/sentence_16.mp3", slowAudio: "audio/slow/sentence_16.mp3" },
+            { jp: "体がだるいですね", kana: "からだがだるいですね", zh: "身體有點疲倦吧", audio: "audio/sentence_17.mp3", slowAudio: "audio/slow/sentence_17.mp3" },
+            { jp: "めっちゃ疲れましたね", kana: "めっちゃつかれましたね", zh: "真的好累啊", audio: "audio/sentence_18.mp3", slowAudio: "audio/slow/sentence_18.mp3" },
+            { jp: "ちょっと眠くなってきました", kana: "ちょっとねむくなってきました", zh: "有點想睡了", audio: "audio/sentence_19.mp3", slowAudio: "audio/slow/sentence_19.mp3" },
+            { jp: "体調が悪いんです", kana: "たいちょうがわるいんです", zh: "身體不舒服", audio: "audio/sentence_20.mp3", slowAudio: "audio/slow/sentence_20.mp3" },
+            { jp: "元気が出ませんね", kana: "げんきがでませんね", zh: "精神有點提不起來吧", audio: "audio/sentence_21.mp3", slowAudio: "audio/slow/sentence_21.mp3" },
+            { jp: "緊張してしまいますね", kana: "きんちょうしてしまいますね", zh: "有點緊張得不得了呢", audio: "audio/sentence_22.mp3", slowAudio: "audio/slow/sentence_22.mp3" },
+            { jp: "気持ちがいいですね", kana: "きもちがいいですね", zh: "感覺真舒服啊", audio: "audio/sentence_23.mp3", slowAudio: "audio/slow/sentence_23.mp3" },
+            { jp: "もうご飯を食べましたか？", kana: "もうごはんをたべましたか？", zh: "已經吃飯了嗎？", audio: "audio/sentence_24.mp3", slowAudio: "audio/slow/sentence_24.mp3" },
+            { jp: "これ、飲めないんです", kana: "これ、のめないんです", zh: "這個我喝不了", audio: "audio/sentence_25.mp3", slowAudio: "audio/slow/sentence_25.mp3" },
+            { jp: "トイレに行きたいんですけど", kana: "トイレにいきたいんですけど", zh: "我想去一下洗手間", audio: "audio/sentence_26.mp3", slowAudio: "audio/slow/sentence_26.mp3" },
+            { jp: "ちょっと休憩しませんか？", kana: "ちょっときゅうけいしませんか？", zh: "要不要稍微休息一下？", audio: "audio/sentence_27.mp3", slowAudio: "audio/slow/sentence_27.mp3" },
+            { jp: "最近忙しいんですか？", kana: "さいきんいそがしいんですか？", zh: "最近是不是很忙？", audio: "audio/sentence_28.mp3", slowAudio: "audio/slow/sentence_28.mp3" },
+            { jp: "最近、結構暇ですね", kana: "さいきん、けっこうひまですね", zh: "最近好像挺閒的啊", audio: "audio/sentence_29.mp3", slowAudio: "audio/slow/sentence_29.mp3" },
+            { jp: "本当にびっくりしましたね", kana: "ほんとうにびっくりしましたね", zh: "真的嚇了一跳啊", audio: "audio/sentence_30.mp3", slowAudio: "audio/slow/sentence_30.mp3" },
+            { jp: "そこ、行ったことがありますよ", kana: "そこ、いったことがありますよ", zh: "那個地方我去過哦", audio: "audio/sentence_31.mp3", slowAudio: "audio/slow/sentence_31.mp3" },
+            { jp: "私もそう思いますよ", kana: "わたしもそうおもいますよ", zh: "我也是這麼想的哦", audio: "audio/sentence_32.mp3", slowAudio: "audio/slow/sentence_32.mp3" },
+            { jp: "まあ、普通ですよ", kana: "まあ、ふつうですよ", zh: "嗯，挺普通的哦", audio: "audio/sentence_33.mp3", slowAudio: "audio/slow/sentence_33.mp3" },
+            { jp: "何かあったんですか？", kana: "なにかあったんですか？", zh: "發生了什麼事嗎？", audio: "audio/sentence_34.mp3", slowAudio: "audio/slow/sentence_34.mp3" },
+            { jp: "それ、どういう意味ですか？", kana: "それ、どういういみですか？", zh: "那個是什麼意思？", audio: "audio/sentence_35.mp3", slowAudio: "audio/slow/sentence_35.mp3" },
+            { jp: "これ、なんですか？", kana: "これ、なんですか？", zh: "這個是什麼？", audio: "audio/sentence_36.mp3", slowAudio: "audio/slow/sentence_36.mp3" },
+            { jp: "あの人、誰なんですか？", kana: "あのひと、だれなんですか？", zh: "那個人是誰啊？", audio: "audio/sentence_37.mp3", slowAudio: "audio/slow/sentence_37.mp3" },
+            { jp: "今、何時ですか？", kana: "いま、なんじですか？", zh: "現在幾點了？", audio: "audio/sentence_38.mp3", slowAudio: "audio/slow/sentence_38.mp3" },
+            { jp: "これ、いくらですか？", kana: "これ、いくらですか？", zh: "這個多少錢？", audio: "audio/sentence_39.mp3", slowAudio: "audio/slow/sentence_39.mp3" },
+            { jp: "それ、どこにありますか？", kana: "それ、どこにありますか？", zh: "那個在哪裡？", audio: "audio/sentence_40.mp3", slowAudio: "audio/slow/sentence_40.mp3" },
+            { jp: "今、なんて言いましたか？", kana: "いま、なんていいましたか？", zh: "剛才說了什麼？", audio: "audio/sentence_41.mp3", slowAudio: "audio/slow/sentence_41.mp3" },
+            { jp: "本当にそうなんですか？", kana: "ほんとうにそうなんですか？", zh: "真的是這樣嗎？", audio: "audio/sentence_42.mp3", slowAudio: "audio/slow/sentence_42.mp3" },
+            { jp: "なるほど、そうなんですね", kana: "なるほど、そうなんですね", zh: "原來如此，是這樣啊", audio: "audio/sentence_43.mp3", slowAudio: "audio/slow/sentence_43.mp3" },
+            { jp: "分かりましたね", kana: "わかりましたね", zh: "明白了啊", audio: "audio/sentence_44.mp3", slowAudio: "audio/slow/sentence_44.mp3" },
+            { jp: "なるほど、分かりました", kana: "なるほど、わかりました", zh: "原來如此，明白了", audio: "audio/sentence_45.mp3", slowAudio: "audio/slow/sentence_45.mp3" },
+            { jp: "多分、そうかもしれませんね", kana: "たぶん、そうかもしれませんね", zh: "或許是這樣吧", audio: "audio/sentence_46.mp3", slowAudio: "audio/slow/sentence_46.mp3" },
+            { jp: "もちろん、分かりました", kana: "もちろん、わかりました", zh: "當然，明白了", audio: "audio/sentence_47.mp3", slowAudio: "audio/slow/sentence_47.mp3" },
+            { jp: "どうしたらいいかな？", kana: "どうしたらいいかな？", zh: "該怎麼辦呢？", audio: "audio/sentence_48.mp3", slowAudio: "audio/slow/sentence_48.mp3" },
+            { jp: "あれ、なんて言うんだっけ？", kana: "あれ、なんていうんだっけ？", zh: "那個…叫什麼來著？", audio: "audio/sentence_49.mp3", slowAudio: "audio/slow/sentence_49.mp3" },
+            { jp: "あ、思い出したよ！", kana: "あ、おもいだしたよ！", zh: "啊，想起來了！", audio: "audio/sentence_50.mp3", slowAudio: "audio/slow/sentence_50.mp3" },
+            { jp: "あれ、忘れちゃった", kana: "あれ、わすれちゃった", zh: "哎呀，忘掉了", audio: "audio/sentence_51.mp3", slowAudio: "audio/slow/sentence_51.mp3" },
+            { jp: "分からないんですよね", kana: "わからないんですよね", zh: "不知道啊", audio: "audio/sentence_52.mp3", slowAudio: "audio/slow/sentence_52.mp3" },
+            { jp: "それで、どうなるの？", kana: "それで、どうなるの？", zh: "那接下來會怎麼樣？", audio: "audio/sentence_53.mp3", slowAudio: "audio/slow/sentence_53.mp3" },
+            { jp: "あの、ちょっと…", kana: "あの、ちょっと…", zh: "那個，稍微…", audio: "audio/sentence_54.mp3", slowAudio: "audio/slow/sentence_54.mp3" },
+            { jp: "ねえ、聞いてくださいよ", kana: "ねえ、きいてくださいよ", zh: "嘿，聽我說一下哦", audio: "audio/sentence_55.mp3", slowAudio: "audio/slow/sentence_55.mp3" },
+            { jp: "他に何かありますか？", kana: "ほかになにかありますか？", zh: "還有其他什麼嗎？", audio: "audio/sentence_56.mp3", slowAudio: "audio/slow/sentence_56.mp3" },
+            { jp: "これ、本当に美味しいですね", kana: "これ、ほんとうにおいしいですね", zh: "這個真的很好吃啊", audio: "audio/sentence_57.mp3", slowAudio: "audio/slow/sentence_57.mp3" },
+            { jp: "これ、めっちゃ可愛いね", kana: "これ、めっちゃかわいいね", zh: "這個超可愛啊", audio: "audio/sentence_58.mp3", slowAudio: "audio/slow/sentence_58.mp3" },
+            { jp: "本当にすごいですね", kana: "ほんとうにすごいですね", zh: "真的很厲害啊", audio: "audio/sentence_59.mp3", slowAudio: "audio/slow/sentence_59.mp3" },
+            { jp: "頭がいい人ですね", kana: "あたまがいいひとですね", zh: "這個人很聰明啊", audio: "audio/sentence_60.mp3", slowAudio: "audio/slow/sentence_60.mp3" },
+            { jp: "それ、いいですね", kana: "それ、いいですね", zh: "那個不錯啊", audio: "audio/sentence_61.mp3", slowAudio: "audio/slow/sentence_61.mp3" },
+            { jp: "本当に楽しいですね", kana: "ほんとうにたのしいですね", zh: "真的很好玩啊", audio: "audio/sentence_62.mp3", slowAudio: "audio/slow/sentence_62.mp3" },
+            { jp: "なんか退屈ですね", kana: "なんかたいくつですね", zh: "有點無聊啊", audio: "audio/sentence_63.mp3", slowAudio: "audio/slow/sentence_63.mp3" },
+            { jp: "何か変ですね", kana: "なにかへんですね", zh: "有點奇怪啊", audio: "audio/sentence_64.mp3", slowAudio: "audio/slow/sentence_64.mp3" },
+            { jp: "あんまり好きじゃないんですよね", kana: "あんまりすきじゃないんですよね", zh: "不太喜歡啊", audio: "audio/sentence_65.mp3", slowAudio: "audio/slow/sentence_65.mp3" },
+            { jp: "この値段、かなり安いね", kana: "このねだん、かなりやすいね", zh: "這個價格挺便宜的啊", audio: "audio/sentence_66.mp3", slowAudio: "audio/slow/sentence_66.mp3" },
+            { jp: "この値段、めっちゃ高いね", kana: "このねだん、めっちゃたかいね", zh: "這個價格超貴啊", audio: "audio/sentence_67.mp3", slowAudio: "audio/slow/sentence_67.mp3" },
+            { jp: "これ、めっちゃ難しいね", kana: "これ、めっちゃむずかしいね", zh: "這個超難啊", audio: "audio/sentence_68.mp3", slowAudio: "audio/slow/sentence_68.mp3" },
+            { jp: "これ、超簡単にできるね", kana: "これ、ちょうかんたんにできるね", zh: "這個超簡單就能做到啊", audio: "audio/sentence_69.mp3", slowAudio: "audio/slow/sentence_69.mp3" },
+            { jp: "これ、すごく役に立ちますね", kana: "これ、すごくやくにちますね", zh: "這個真的很有用啊", audio: "audio/sentence_70.mp3", slowAudio: "audio/slow/sentence_70.mp3" },
+            { jp: "ちょっとしつこいですね", kana: "ちょっとしつこいですね", zh: "有點煩人啊", audio: "audio/sentence_71.mp3", slowAudio: "audio/slow/sentence_71.mp3" },
+            { jp: "それは無理ですよ", kana: "それはむりですよ", zh: "那是不可能的哦", audio: "audio/sentence_72.mp3", slowAudio: "audio/slow/sentence_72.mp3" },
+            { jp: "別に何でもないですよ", kana: "べつになんでもないですよ", zh: "沒什麼特別的哦", audio: "audio/sentence_73.mp3", slowAudio: "audio/slow/sentence_73.mp3" },
+            { jp: "大したことじゃないですよ", kana: "だいしたことじゃないですよ", zh: "沒什麼了不起的哦", audio: "audio/sentence_74.mp3", slowAudio: "audio/slow/sentence_74.mp3" },
+            { jp: "私、そう思うんですよね", kana: "わたし、そうおもうんですよね", zh: "我就是這麼覺得啊", audio: "audio/sentence_75.mp3", slowAudio: "audio/slow/sentence_75.mp3" },
+            { jp: "それ、私の物ですよ", kana: "それ、わたしのものですよ", zh: "那是我的東西哦", audio: "audio/sentence_76.mp3", slowAudio: "audio/slow/sentence_76.mp3" },
+            { jp: "それ、できますか？", kana: "それ、できますか？", zh: "那個可以做到嗎？", audio: "audio/sentence_77.mp3", slowAudio: "audio/slow/sentence_77.mp3" },
+            { jp: "それはできないんです", kana: "それはできないんです", zh: "那個做不到", audio: "audio/sentence_78.mp3", slowAudio: "audio/slow/sentence_78.mp3" },
+            { jp: "ちょっとやってみてください", kana: "ちょっとやってみてください", zh: "請試著做一下吧", audio: "audio/sentence_79.mp3", slowAudio: "audio/slow/sentence_79.mp3" },
+            { jp: "頑張ってくださいね", kana: "がんばってくださいね", zh: "加油哦", audio: "audio/sentence_80.mp3", slowAudio: "audio/slow/sentence_80.mp3" },
+            { jp: "手伝いましょうか？", kana: "てつだいましょうか？", zh: "要我幫忙嗎？", audio: "audio/sentence_81.mp3", slowAudio: "audio/slow/sentence_81.mp3" },
+            { jp: "じゃあ、始めましょうね", kana: "じゃあ、はじめましょうね", zh: "那麼，我們開始吧", audio: "audio/sentence_82.mp3", slowAudio: "audio/slow/sentence_82.mp3" },
+            { jp: "準備できましたか？", kana: "じゅんびできましたか？", zh: "準備好了嗎？", audio: "audio/sentence_83.mp3", slowAudio: "audio/slow/sentence_83.mp3" },
+            { jp: "こっちに来てください", kana: "こっちにきてください", zh: "請過來這邊", audio: "audio/sentence_84.mp3", slowAudio: "audio/slow/sentence_84.mp3" },
+            { jp: "あっちに行ってください", kana: "あっちにいってください", zh: "請去那邊", audio: "audio/sentence_85.mp3", slowAudio: "audio/slow/sentence_85.mp3" },
+            { jp: "気にしないでくださいね", kana: "きにしないでくださいね", zh: "別太在意哦", audio: "audio/sentence_86.mp3", slowAudio: "audio/slow/sentence_86.mp3" },
+            { jp: "心配しないでくださいね", kana: "しんぱいしないでくださいね", zh: "別擔心哦", audio: "audio/sentence_87.mp3", slowAudio: "audio/slow/sentence_87.mp3" },
+            { jp: "大丈夫ですよ、安心してください", kana: "だいじょうぶですよ、あんしんしてください", zh: "沒事的，請放心", audio: "audio/sentence_88.mp3", slowAudio: "audio/slow/sentence_88.mp3" },
+            { jp: "ちょっと待ってくださいね", kana: "ちょっとまってくださいね", zh: "請稍等一下哦", audio: "audio/sentence_89.mp3", slowAudio: "audio/slow/sentence_89.mp3" },
+            { jp: "もう決めましたか？", kana: "もうきめましたか？", zh: "已經決定了嗎？", audio: "audio/sentence_90.mp3", slowAudio: "audio/slow/sentence_90.mp3" },
+            { jp: "まだ決めてないんですよね", kana: "まだきめてないんですよね", zh: "還沒決定啊", audio: "audio/sentence_91.mp3", slowAudio: "audio/slow/sentence_91.mp3" },
+            { jp: "そんな急に言われても…", kana: "そんなきゅうにいわれても…", zh: "這麼突然地說…", audio: "audio/sentence_92.mp3", slowAudio: "audio/slow/sentence_92.mp3" },
+            { jp: "まあ、いいか、どうでも", kana: "まあ、いいか、どうでも", zh: "算了，無所謂", audio: "audio/sentence_93.mp3", slowAudio: "audio/slow/sentence_93.mp3" },
+            { jp: "どっちでもいいですよ", kana: "どっちでもいいですよ", zh: "哪個都行哦", audio: "audio/sentence_94.mp3", slowAudio: "audio/slow/sentence_94.mp3" },
+            { jp: "それでいいと思いますよ", kana: "それでいいとおもいますよ", zh: "那樣應該就好了吧", audio: "audio/sentence_95.mp3", slowAudio: "audio/slow/sentence_95.mp3" },
+            { jp: "これ、買っちゃおうか？", kana: "これ、かっちゃおうか？", zh: "要不要買這個呢？", audio: "audio/sentence_96.mp3", slowAudio: "audio/slow/sentence_96.mp3" },
+            { jp: "ちょっと確認しますね", kana: "ちょっとかくにんしますね", zh: "我稍微確認一下哦", audio: "audio/sentence_97.mp3", slowAudio: "audio/slow/sentence_97.mp3" },
+            { jp: "ゆっくりしてくださいね", kana: "ゆっくりしてくださいね", zh: "請慢慢來哦", audio: "audio/sentence_98.mp3", slowAudio: "audio/slow/sentence_98.mp3" },
+            { jp: "何かお勧めありますか？", kana: "なにかおすすめありますか？", zh: "有什麼推薦的嗎？", audio: "audio/sentence_99.mp3", slowAudio: "audio/slow/sentence_99.mp3" },
+            { jp: "少し休憩しませんか？", kana: "すこしきゅうけいしませんか？", zh: "要不要稍微休息一下？", audio: "audio/sentence_100.mp3", slowAudio: "audio/slow/sentence_100.mp3" }
+        ];
+
+        let currentPage = 1;
+        const itemsPerPage = 10;
+
+        function renderSentences(page) {
+            const container = document.getElementById("sentences");
+            container.innerHTML = "";
+            const start = (page - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+            const paginatedSentences = sentences.slice(start, end);
+
+            paginatedSentences.forEach(sentence => {
+                const div = document.createElement("div");
+                div.className = "sentence";
+                div.innerHTML = `
+                    <div class="text">
+                        <div class="jp">${sentence.jp}</div>
+                        <div class="zh">${sentence.zh}</div>
+                        <div class="kana">${sentence.kana}</div>
+                    </div>
+                    <div class="buttons">
+                        <button class="play-btn" onclick="playAudio('${sentence.audio}')">正常播放</button>
+                        <button class="slow-btn" onclick="playAudio('${sentence.slowAudio}')">慢速播放</button>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+
+            renderPagination();
+        }
+
+        function playAudio(url) {
+            const audio = new Audio(url);
+            audio.play().catch(error => console.log("播放失敗:", error));
+        }
+
+        function renderPagination() {
+            const totalPages = Math.ceil(sentences.length / itemsPerPage);
+            const pagination = document.getElementById("pagination");
+            pagination.innerHTML = "";
+
+            for (let i = 1; i <= totalPages; i++) {
+                const button = document.createElement("button");
+                button.textContent = i;
+                button.disabled = i === currentPage;
+                button.onclick = () => {
+                    currentPage = i;
+                    renderSentences(currentPage);
+                };
+                pagination.appendChild(button);
+            }
+        }
+
+        // 頁面載入時顯示第一頁
+        renderSentences(currentPage);
+    </script>
+</body>
+</html>
